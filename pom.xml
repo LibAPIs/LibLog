@@ -9,16 +9,16 @@
 	</organization>
 
 	<groupId>com.mclarkdev.tools</groupId>
-	<artifactId>libmetrics</artifactId>
+	<artifactId>liblog</artifactId>
 	<version>PRERELEASE</version>
 	<packaging>jar</packaging>
 
-	<name>libmetrics</name>
-	<url>https://www.mclarkdev.com/tools/libmetrics</url>
-	<description>An generic metrics cache for collecting various system counters.</description>
+	<name>liblog</name>
+	<url>https://www.mclarkdev.com/tools/liblog</url>
+	<description>A generic log manager.</description>
 
 	<scm>
-		<url>https://git.mclarkdev.com/MClarkDev.com--Public/LibMetrics.git</url>
+		<url>https://git.mclarkdev.com/MClarkDev.com--Public/liblog.git</url>
 	</scm>
 
 	<properties>
@@ -58,13 +58,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<dependencies>
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20160212</version>
-			<scope>compile</scope>
-		</dependency>
-	</dependencies>
 </project>

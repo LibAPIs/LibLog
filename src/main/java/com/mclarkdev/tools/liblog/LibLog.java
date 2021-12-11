@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 public class LibLog {
@@ -30,10 +32,16 @@ public class LibLog {
 		(new File(_LOGS)).mkdirs();
 		logFiles = new HashMap<>();
 
-		setupLogs();
+		rollLogs();
+		Timer t = new Timer();
+		t.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				rollLogs();
+			}
+		}, timeTillRotate(), 24 * 60 * 60 * 1000);
 	}
 
-	public static void setupLogs() {
+	private static void rollLogs() {
 
 		for (Map.Entry<String, PrintWriter> entry : logFiles.entrySet()) {
 
@@ -138,5 +146,16 @@ public class LibLog {
 				e.printStackTrace(out);
 			}
 		}
+	}
+
+	private static long timeTillRotate() {
+
+		Calendar midnight = Calendar.getInstance();
+		midnight.set(Calendar.HOUR_OF_DAY, 0);
+		midnight.set(Calendar.MINUTE, 0);
+		midnight.set(Calendar.SECOND, 0);
+		midnight.set(Calendar.MILLISECOND, 1);
+		midnight.set(Calendar.DAY_OF_YEAR, midnight.get(Calendar.DAY_OF_YEAR) + 1);
+		return midnight.getTimeInMillis() - System.currentTimeMillis() - 1;
 	}
 }

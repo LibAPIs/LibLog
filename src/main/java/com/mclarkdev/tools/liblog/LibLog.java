@@ -21,15 +21,19 @@ public class LibLog {
 		return _DFORMAT.format(Calendar.getInstance().getTime());
 	}
 
-	private static final String _LOGS;
+	private static final File logDir;
+	private static final String logPath;
+
 	private static final HashMap<String, PrintWriter> logFiles;
 
 	static {
 
 		String dir = System.getenv("_LOGDIR");
-		_LOGS = (dir == null) ? "logs" : dir;
+		logPath = (dir == null) ? "logs" : dir;
 
-		(new File(_LOGS)).mkdirs();
+		logDir = (new File(logPath));
+		logDir.mkdirs();
+
 		logFiles = new HashMap<>();
 
 		rollLogs();
@@ -59,7 +63,7 @@ public class LibLog {
 
 	private static PrintWriter newLog(String log) {
 
-		File f = new File(_LOGS, String.format("%s-%s.log", //
+		File f = new File(logDir, String.format("%s-%s.log", //
 				getTime().substring(0, 8), log));
 
 		try {
@@ -71,6 +75,10 @@ public class LibLog {
 
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static final File getLogDir() {
+		return logDir;
 	}
 
 	public static void log(String message) {

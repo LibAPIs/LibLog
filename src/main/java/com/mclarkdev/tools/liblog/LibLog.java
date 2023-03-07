@@ -98,9 +98,6 @@ public class LibLog {
 		String timeNow = _DFORMAT.format(Calendar.getInstance().getTime());
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 
-		// strip newlines
-		message = message.replace("\n", "");
-
 		// get call trace
 		String fullClassName;
 		int lineNumber;

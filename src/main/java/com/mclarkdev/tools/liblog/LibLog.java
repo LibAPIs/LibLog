@@ -3,11 +3,13 @@ package com.mclarkdev.tools.liblog;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -23,6 +25,10 @@ public class LibLog {
 
 	private static final File logDir;
 	private static final String logPath;
+
+	private static final String defaultLog = "server";
+
+	private static final Properties logCodes = new Properties();
 
 	private static final HashMap<String, PrintWriter> logFiles;
 
@@ -81,19 +87,35 @@ public class LibLog {
 		return logDir;
 	}
 
-	public static void log(String message) {
-		log("server", message, null);
+	public static String log(String message) {
+		return log(defaultLog, message, null);
 	}
 
-	public static void log(String message, Throwable e) {
-		log("server", message, e);
+	public static String log(String message, Throwable e) {
+		return log(defaultLog, message, e);
 	}
 
-	public static void log(String log, String message) {
-		log(log, message, null);
+	public static String log(String log, String message) {
+		return log(log, message, null);
 	}
 
-	public static void log(String log, String message, Throwable e) {
+	public static String logC(String code) {
+		return log(defaultLog, c(code), null);
+	}
+
+	public static String logC(String code, Throwable e) {
+		return log(defaultLog, c(code), e);
+	}
+
+	public static String logC(String log, String code) {
+		return log(log, c(code), null);
+	}
+
+	public static String logC(String log, String code, Throwable e) {
+		return log(log, c(code), e);
+	}
+
+	public static String log(String log, String message, Throwable e) {
 
 		String timeNow = _DFORMAT.format(Calendar.getInstance().getTime());
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
@@ -114,15 +136,7 @@ public class LibLog {
 		}
 
 		// build message
-		String baseLogLine = " +";
-		baseLogLine += timeNow;
-		baseLogLine += " - [ ";
-		baseLogLine += log;
-		baseLogLine += " @ ";
-		baseLogLine += fullClassName;
-		baseLogLine += " : ";
-		baseLogLine += lineNumber;
-		baseLogLine += " ]";
+		String baseLogLine = String.format(" +%s - [ %s @ %s : %d ]", timeNow, log, fullClassName, lineNumber);
 
 		String fullLogLine = baseLogLine + " - " + message;
 
@@ -151,6 +165,8 @@ public class LibLog {
 				e.printStackTrace(out);
 			}
 		}
+
+		return fullLogLine;
 	}
 
 	private static long timeTillRotate() {
@@ -162,5 +178,16 @@ public class LibLog {
 		midnight.set(Calendar.MILLISECOND, 1);
 		midnight.set(Calendar.DAY_OF_YEAR, midnight.get(Calendar.DAY_OF_YEAR) + 1);
 		return midnight.getTimeInMillis() - System.currentTimeMillis() - 1;
+	}
+
+	public static void loadCodes(InputStream in) throws IOException {
+
+		logCodes.load(in);
+	}
+
+	public static String c(String code) {
+
+		String p = logCodes.getProperty(code);
+		return String.format("%s : %s", code, ((p != null) ? p : ""));
 	}
 }

@@ -115,6 +115,10 @@ public class LibLog {
 		return log(log, c(code), e);
 	}
 
+	public static String logF(String code, Object... args) {
+		return log(defaultLog, String.format(c(code), args));
+	}
+
 	public static String log(String log, String message, Throwable e) {
 
 		String timeNow = _DFORMAT.format(Calendar.getInstance().getTime());
@@ -166,7 +170,7 @@ public class LibLog {
 			}
 		}
 
-		return fullLogLine;
+		return message;
 	}
 
 	private static long timeTillRotate() {
@@ -185,9 +189,8 @@ public class LibLog {
 		logCodes.load(in);
 	}
 
-	public static String c(String code) {
-
-		String p = logCodes.getProperty(code);
-		return String.format("%s : %s", code, ((p != null) ? p : ""));
+	public static String c(String lookup) {
+		return ((!logCodes.containsKey(lookup)) ? lookup : //
+				String.format("%s : %s", lookup, logCodes.getProperty(lookup)));
 	}
 }

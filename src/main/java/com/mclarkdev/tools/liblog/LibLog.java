@@ -116,7 +116,7 @@ public class LibLog {
 	}
 
 	public static String logF(String code, Object... args) {
-		return log(defaultLog, String.format(c(code), args));
+		return log(defaultLog, f(code, args));
 	}
 
 	public static String log(String log, String message, Throwable e) {
@@ -187,6 +187,10 @@ public class LibLog {
 	public static void loadCodes(InputStream in) throws IOException {
 
 		logCodes.load(in);
+	}
+
+	public static String f(String code, Object... args) {
+		return String.format(c(code), args);
 	}
 
 	public static String c(String lookup) {

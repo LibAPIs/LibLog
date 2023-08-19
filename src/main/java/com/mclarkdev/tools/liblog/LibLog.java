@@ -1,198 +1,251 @@
 package com.mclarkdev.tools.liblog;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LibLog {
 
-	private static final SimpleDateFormat _DFORMAT = //
-			new SimpleDateFormat("YYYYMMdd HH:mm:ss");
-
-	public static String getTime() {
-		return _DFORMAT.format(Calendar.getInstance().getTime());
+	public interface LogWriter {
+		public abstract void write(LibLogMessage message);
 	}
 
-	private static final File logDir;
-	private static final String logPath;
+	private static final String defaultFacility = "server";
 
-	private static final String defaultLog = "server";
+	private static String appName;
+
+	private static final Set<LogWriter> logWriters;
 
 	private static final Properties logCodes = new Properties();
 
-	private static final HashMap<String, PrintWriter> logFiles;
-
 	static {
 
-		String dir = System.getenv("_LOGDIR");
-		logPath = (dir == null) ? "logs" : dir;
+		// Determine application name
+		String envName = System.getenv("APP_NAME");
+		appName = (envName != null) ? envName : "MyApp";
 
-		logDir = (new File(logPath));
-		logDir.mkdirs();
+		// Setup logger cache
+		logWriters = ConcurrentHashMap.newKeySet();
 
-		logFiles = new HashMap<>();
-
-		rollLogs();
-		Timer t = new Timer();
-		t.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
-				rollLogs();
-			}
-		}, timeTillRotate(), 24 * 60 * 60 * 1000);
+		// Default write logs to disk
+		addLogger(new LibLogFileWriter());
 	}
 
-	private static void rollLogs() {
-
-		for (Map.Entry<String, PrintWriter> entry : logFiles.entrySet()) {
-
-			try {
-
-				// close open and create new
-				entry.getValue().close();
-				newLog(entry.getKey());
-			} catch (Exception e) {
-
-				e.printStackTrace();
-			}
-		}
+	/**
+	 * Get the name of the application, known to the logger.
+	 * 
+	 * @return name of the application
+	 */
+	public static String getAppName() {
+		return appName;
 	}
 
-	private static PrintWriter newLog(String log) {
-
-		File f = new File(logDir, String.format("%s-%s.log", //
-				getTime().substring(0, 8), log));
-
-		try {
-
-			PrintWriter p = new PrintWriter(new FileWriter(f, true), true);
-			logFiles.put(log, p);
-			return p;
-		} catch (IOException e) {
-
-			throw new RuntimeException(e);
-		}
+	/**
+	 * Set the name of the application.
+	 * 
+	 * @param name
+	 */
+	public static void setAppName(String name) {
+		appName = name;
 	}
 
-	public static final File getLogDir() {
-		return logDir;
-	}
-
-	public static String log(String message) {
-		return log(defaultLog, message, null);
-	}
-
-	public static String log(String message, Throwable e) {
-		return log(defaultLog, message, e);
-	}
-
-	public static String log(String log, String message) {
-		return log(log, message, null);
-	}
-
-	public static String logC(String code) {
-		return log(defaultLog, c(code), null);
-	}
-
-	public static String logC(String code, Throwable e) {
-		return log(defaultLog, c(code), e);
-	}
-
-	public static String logC(String log, String code) {
-		return log(log, c(code), null);
-	}
-
-	public static String logC(String log, String code, Throwable e) {
-		return log(log, c(code), e);
-	}
-
-	public static String logF(String code, Object... args) {
-		return log(defaultLog, f(code, args));
-	}
-
-	public static String log(String log, String message, Throwable e) {
-
-		String timeNow = _DFORMAT.format(Calendar.getInstance().getTime());
-		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-
-		// get call trace
-		String fullClassName;
-		int lineNumber;
-		for (int x = 1;; x++) {
-
-			fullClassName = trace[x].getClassName();
-
-			// first occurrence of not LibLog
-			if (!fullClassName.equals(LibLog.class.getName())) {
-
-				lineNumber = trace[x].getLineNumber();
-				break;
-			}
-		}
-
-		// build message
-		String baseLogLine = String.format(" +%s - [ %s @ %s : %d ]", timeNow, log, fullClassName, lineNumber);
-
-		String fullLogLine = baseLogLine + " - " + message;
-
-		PrintWriter out = logFiles.get(log);
-		if (out == null) {
-			out = newLog(log);
-		}
-		synchronized (out) {
-
-			out.println("O:" + fullLogLine);
-
-			// print stack trace if applicable
-			if (e != null) {
-
-				// generate an error uuid
-				String errorUUID = UUID.randomUUID().toString();
-
-				// print error hash to out
-				out.println("O:" + baseLogLine + " - " + "Error UUID [ " + errorUUID + " ]");
-
-				// print error message and error uuid to err
-				out.println("E:" + fullLogLine);
-				out.println("E:" + baseLogLine + " E " + "Error UUID [ " + errorUUID + " ]");
-
-				// print the stack track
-				e.printStackTrace(out);
-			}
-		}
-
-		return message;
-	}
-
-	private static long timeTillRotate() {
-
-		Calendar midnight = Calendar.getInstance();
-		midnight.set(Calendar.HOUR_OF_DAY, 0);
-		midnight.set(Calendar.MINUTE, 0);
-		midnight.set(Calendar.SECOND, 0);
-		midnight.set(Calendar.MILLISECOND, 1);
-		midnight.set(Calendar.DAY_OF_YEAR, midnight.get(Calendar.DAY_OF_YEAR) + 1);
-		return midnight.getTimeInMillis() - System.currentTimeMillis() - 1;
-	}
-
-	public static void loadCodes(InputStream in) throws IOException {
-
+	/**
+	 * Load localized strings from disk.
+	 * 
+	 * @param in
+	 * @throws IOException
+	 */
+	public static void loadStrings(InputStream in) throws IOException {
 		logCodes.load(in);
 	}
 
-	public static String f(String code, Object... args) {
-		return String.format(c(code), args);
+	/**
+	 * Add a log receiver.
+	 * 
+	 * @param logger
+	 */
+	public static void addLogger(LogWriter logger) {
+		logWriters.add(logger);
 	}
 
+	/**
+	 * Remove a log receiver.
+	 * 
+	 * @param logger
+	 */
+	public static void removeLogger(LogWriter logger) {
+		if (logger == null) {
+			logWriters.clear();
+		} else {
+			logWriters.remove(logger);
+		}
+	}
+
+	/**
+	 * Log a message.
+	 * 
+	 * @param message
+	 * @return
+	 */
+	public static LibLogMessage log(String message) {
+		return log(new LibLogMessage(defaultFacility, message, null));
+	}
+
+	/**
+	 * Log a message.
+	 * 
+	 * @param message
+	 * @param e
+	 * @return
+	 */
+	public static LibLogMessage log(String message, Throwable e) {
+		return log(new LibLogMessage(defaultFacility, message, e));
+	}
+
+	/**
+	 * Log a message.
+	 * 
+	 * @param facility
+	 * @param message
+	 * @return
+	 */
+	public static LibLogMessage log(String facility, String message) {
+		return log(new LibLogMessage(facility, message, null));
+	}
+
+	/**
+	 * Log a message
+	 * 
+	 * @param facility
+	 * @param message
+	 * @param e
+	 * @return
+	 */
+	public static LibLogMessage log(String facility, String message, Throwable e) {
+		return log(new LibLogMessage(facility, message, e));
+	}
+
+	/**
+	 * Log a message.
+	 * 
+	 * @param format
+	 * @param args
+	 * @return
+	 */
+	public static LibLogMessage logF_(String format, Object... args) {
+		return log(new LibLogMessage(defaultFacility, f(format, args), null));
+	}
+
+	/**
+	 * Log a message.
+	 * 
+	 * @param facility
+	 * @param format
+	 * @param args
+	 * @return
+	 */
+	public static LibLogMessage logF(String facility, String format, Object... args) {
+		return log(new LibLogMessage(facility, f(format, args), null));
+	}
+
+	/**
+	 * Log a localized message.
+	 * 
+	 * @param code
+	 * @return
+	 */
+	public static LibLogMessage clog(String code) {
+		return log(new LibLogMessage(defaultFacility, c(code), null));
+	}
+
+	/**
+	 * Log a localized message.
+	 * 
+	 * @param code
+	 * @param e
+	 * @return
+	 */
+	public static LibLogMessage clog(String code, Throwable e) {
+		return log(new LibLogMessage(defaultFacility, c(code), e));
+	}
+
+	/**
+	 * Log a localized message.
+	 * 
+	 * @param facility
+	 * @param code
+	 * @return
+	 */
+	public static LibLogMessage clog(String facility, String code) {
+		return log(new LibLogMessage(facility, c(code), null));
+	}
+
+	/**
+	 * Log a localized message.
+	 * 
+	 * @param facility
+	 * @param code
+	 * @param e
+	 * @return
+	 */
+	public static LibLogMessage clog(String facility, String code, Throwable e) {
+		return log(new LibLogMessage(facility, c(code), e));
+	}
+
+	/**
+	 * Log a localized message.
+	 * 
+	 * @param code
+	 * @param args
+	 * @return
+	 */
+	public static LibLogMessage clogF_(String code, Object... args) {
+		return log(new LibLogMessage(defaultFacility, f(c(code), args), null));
+	}
+
+	/**
+	 * Log a localized message.
+	 * 
+	 * @param facility
+	 * @param code
+	 * @param args
+	 * @return
+	 */
+	public static LibLogMessage clogF(String facility, String code, Object... args) {
+		return log(new LibLogMessage(facility, f(c(code), args), null));
+	}
+
+	/**
+	 * Log a message.
+	 * 
+	 * @param message
+	 * @return
+	 */
+	public static LibLogMessage log(LibLogMessage message) {
+		for (LogWriter logger : logWriters)
+			logger.write(message);
+		return message;
+	}
+
+	/**
+	 * Format a message.
+	 * 
+	 * @param format
+	 * @param args
+	 * @return
+	 */
+	public static String f(String format, Object... args) {
+		return String.format(format, args);
+	}
+
+	/**
+	 * Retrieve localized text for the given key.
+	 * 
+	 * @param lookup
+	 * @return
+	 */
 	public static String c(String lookup) {
 		return ((!logCodes.containsKey(lookup)) ? lookup : //
 				String.format("%s : %s", lookup, logCodes.getProperty(lookup)));

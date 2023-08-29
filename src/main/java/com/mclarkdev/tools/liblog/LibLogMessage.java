@@ -25,7 +25,6 @@ public class LibLogMessage {
 		this.stamp = _DFORMAT.format(time);
 
 		this.facility = facility;
-		this.message = message;
 		this.tossed = tossed;
 
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
@@ -41,6 +40,10 @@ public class LibLogMessage {
 				break;
 			}
 		}
+
+		// build the message
+		this.message = message + //
+				((tossed != null) ? ("\n" + getLoggedThrowableString()) : "");
 	}
 
 	public long getTime() {
@@ -86,15 +89,9 @@ public class LibLogMessage {
 	}
 
 	public String buildFullLogLine() {
-		String msg = String.format(//
+		return String.format(//
 				" +%s - [ %s @ %s : %d ] - %s", //
 				stamp, facility, className, classLine, message);
-
-		if (tossed != null) {
-			msg += "\n" + getLoggedThrowableString();
-		}
-
-		return msg;
 	}
 
 	public String toString() {

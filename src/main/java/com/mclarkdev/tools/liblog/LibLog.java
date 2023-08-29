@@ -89,7 +89,7 @@ public class LibLog {
 	 * @param message
 	 * @return
 	 */
-	public static LibLogMessage log(String message) {
+	public static LibLogMessage _log(String message) {
 		return log(new LibLogMessage(defaultFacility, message, null));
 	}
 
@@ -100,7 +100,7 @@ public class LibLog {
 	 * @param e
 	 * @return
 	 */
-	public static LibLogMessage log(String message, Throwable e) {
+	public static LibLogMessage _log(String message, Throwable e) {
 		return log(new LibLogMessage(defaultFacility, message, e));
 	}
 
@@ -134,7 +134,7 @@ public class LibLog {
 	 * @param args
 	 * @return
 	 */
-	public static LibLogMessage logF_(String format, Object... args) {
+	public static LibLogMessage _logF(String format, Object... args) {
 		return log(new LibLogMessage(defaultFacility, f(format, args), null));
 	}
 
@@ -156,7 +156,7 @@ public class LibLog {
 	 * @param code
 	 * @return
 	 */
-	public static LibLogMessage clog(String code) {
+	public static LibLogMessage _clog(String code) {
 		return log(new LibLogMessage(defaultFacility, c(code), null));
 	}
 
@@ -167,7 +167,7 @@ public class LibLog {
 	 * @param e
 	 * @return
 	 */
-	public static LibLogMessage clog(String code, Throwable e) {
+	public static LibLogMessage _clog(String code, Throwable e) {
 		return log(new LibLogMessage(defaultFacility, c(code), e));
 	}
 
@@ -201,7 +201,7 @@ public class LibLog {
 	 * @param args
 	 * @return
 	 */
-	public static LibLogMessage clogF_(String code, Object... args) {
+	public static LibLogMessage _clogF(String code, Object... args) {
 		return log(new LibLogMessage(defaultFacility, f(c(code), args), null));
 	}
 

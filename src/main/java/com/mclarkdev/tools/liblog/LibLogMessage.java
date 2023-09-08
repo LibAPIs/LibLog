@@ -19,6 +19,13 @@ public class LibLogMessage {
 	private final String className;
 	private final long classLine;
 
+	/**
+	 * Build a new LibLogMessage.
+	 * 
+	 * @param facility
+	 * @param message
+	 * @param tossed
+	 */
 	public LibLogMessage(String facility, String message, Throwable tossed) {
 
 		this.time = System.currentTimeMillis();
@@ -46,26 +53,56 @@ public class LibLogMessage {
 				((tossed != null) ? ("\n" + getLoggedThrowableString()) : "");
 	}
 
+	/**
+	 * Returns the time-stamp of message generation.
+	 * 
+	 * @return
+	 */
 	public long getTime() {
 		return time;
 	}
 
+	/**
+	 * Returns the time-stamp of message generation.
+	 * 
+	 * @return
+	 */
 	public String getTimeStamp() {
 		return stamp;
 	}
 
+	/**
+	 * Returns the log facility passed to the logger.
+	 * 
+	 * @return
+	 */
 	public String getLoggedFacility() {
 		return facility;
 	}
 
+	/**
+	 * Returns the message passed to the logger.
+	 * 
+	 * @return
+	 */
 	public String getLoggedMessage() {
 		return message;
 	}
 
+	/**
+	 * Returns the throwable passed to the logger.
+	 * 
+	 * @return
+	 */
 	public Throwable getLoggedThrowable() {
 		return tossed;
 	}
 
+	/**
+	 * Returns the logged throwable wrapped with header / footer.
+	 * 
+	 * @return
+	 */
 	public String getLoggedThrowableString() {
 		if (tossed == null) {
 			return null;
@@ -80,21 +117,59 @@ public class LibLogMessage {
 				" --- STACK END ---";
 	}
 
+	/**
+	 * Returns the class name that invoked the log operation.
+	 * 
+	 * @return
+	 */
 	public String getLoggedClassName() {
 		return className;
 	}
 
+	/**
+	 * Returns the line number that invoked the log operation.
+	 * 
+	 * @return
+	 */
 	public long getLoggedLineNumber() {
 		return classLine;
 	}
 
-	public String buildFullLogLine() {
+	/**
+	 * Build a basic log line.
+	 * 
+	 * @return
+	 */
+	public String buildLogLine() {
+		return String.format(//
+				" +%s - [ %s ] - %s", //
+				stamp, facility, message);
+	}
+
+	/**
+	 * Build a log line with debugging information.
+	 * 
+	 * @return
+	 */
+	public String buildDebugLine() {
 		return String.format(//
 				" +%s - [ %s @ %s : %d ] - %s", //
 				stamp, facility, className, classLine, message);
 	}
 
+	/**
+	 * Returns the logged message.
+	 */
 	public String toString() {
-		return message;
+		return getLoggedMessage();
+	}
+
+	/**
+	 * Returns an exception with the logged message as the cause.
+	 * 
+	 * @return
+	 */
+	public RuntimeException asException() {
+		return new RuntimeException(getLoggedMessage());
 	}
 }

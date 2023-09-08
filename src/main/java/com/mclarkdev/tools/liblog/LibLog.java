@@ -9,46 +9,46 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LibLog {
 
 	public interface LogWriter {
-		public abstract void write(LibLogMessage message);
+		public abstract void write(boolean debug, LibLogMessage message);
 	}
 
-	private static final String defaultFacility = "server";
-
-	private static String appName;
+	private static final String defaultLog = "server";
 
 	private static final Set<LogWriter> logWriters;
 
 	private static final Properties logCodes = new Properties();
 
-	static {
+	private static boolean logDebug = false;
 
-		// Determine application name
-		String envName = System.getenv("APP_NAME");
-		appName = (envName != null) ? envName : "MyApp";
+	static {
 
 		// Setup logger cache
 		logWriters = ConcurrentHashMap.newKeySet();
 
 		// Default write logs to disk
-		addLogger(new LibLogFileWriter());
+		String logDir = System.getenv("LOG_DIR");
+		addLogger(new LibLogFileWriter(logDir));
+
+		// Debug if environment variable set
+		logDebug = (System.getenv("LOG_DEBUG") != null);
 	}
 
 	/**
-	 * Get the name of the application, known to the logger.
+	 * Returns true if debug logging is enabled.
 	 * 
-	 * @return name of the application
+	 * @return
 	 */
-	public static String getAppName() {
-		return appName;
+	public static boolean getDebugEnabled() {
+		return logDebug;
 	}
 
 	/**
-	 * Set the name of the application.
+	 * Enable or disable debug logging.
 	 * 
-	 * @param name
+	 * @param debug
 	 */
-	public static void setAppName(String name) {
-		appName = name;
+	public static void setDebugEnabled(boolean debug) {
+		logDebug = debug;
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _log(String message) {
-		return log(new LibLogMessage(defaultFacility, message, null));
+		return log(new LibLogMessage(defaultLog, message, null));
 	}
 
 	/**
@@ -101,7 +101,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _log(String message, Throwable e) {
-		return log(new LibLogMessage(defaultFacility, message, e));
+		return log(new LibLogMessage(defaultLog, message, e));
 	}
 
 	/**
@@ -135,7 +135,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _logF(String format, Object... args) {
-		return log(new LibLogMessage(defaultFacility, f(format, args), null));
+		return log(new LibLogMessage(defaultLog, f(format, args), null));
 	}
 
 	/**
@@ -157,7 +157,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clog(String code) {
-		return log(new LibLogMessage(defaultFacility, c(code), null));
+		return log(new LibLogMessage(defaultLog, c(code), null));
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clog(String code, Throwable e) {
-		return log(new LibLogMessage(defaultFacility, c(code), e));
+		return log(new LibLogMessage(defaultLog, c(code), e));
 	}
 
 	/**
@@ -202,7 +202,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clogF(String code, Object... args) {
-		return log(new LibLogMessage(defaultFacility, f(c(code), args), null));
+		return log(new LibLogMessage(defaultLog, f(c(code), args), null));
 	}
 
 	/**
@@ -225,7 +225,7 @@ public class LibLog {
 	 */
 	public static LibLogMessage log(LibLogMessage message) {
 		for (LogWriter logger : logWriters)
-			logger.write(message);
+			logger.write(logDebug, message);
 		return message;
 	}
 

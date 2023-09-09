@@ -8,11 +8,11 @@
 
 	<groupId>com.mclarkdev.tools</groupId>
 	<artifactId>liblog</artifactId>
-	<version>1.4.3</version>
+	<version>1.5</version>
 	<packaging>jar</packaging>
 
 	<name>liblog</name>
-	<url>https://about.mclarkdev.com/posts/1097/libapis/</url>
+	<url>https://git.mclarkdev.com/LibAPIs/LibLog.git</url>
 	<description>A basic application logger.</description>
 
 	<scm>
@@ -46,7 +46,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -59,7 +59,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>3.5.0</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -72,7 +72,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>

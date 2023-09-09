@@ -12,7 +12,7 @@ public class LibLog {
 		public abstract void write(boolean debug, LibLogMessage message);
 	}
 
-	private static final String defaultLog = "server";
+	private static final String defaultLog;
 
 	private static final Set<LogWriter> logWriters;
 
@@ -21,6 +21,10 @@ public class LibLog {
 	private static boolean logDebug = false;
 
 	static {
+
+		// Determine default log name
+		String defLog = System.getenv("LOG_NAME");
+		defaultLog = (defLog != null) ? defLog : "server";
 
 		// Setup logger cache
 		logWriters = ConcurrentHashMap.newKeySet();
@@ -36,7 +40,7 @@ public class LibLog {
 	/**
 	 * Returns true if debug logging is enabled.
 	 * 
-	 * @return
+	 * @return debugging mode enabled
 	 */
 	public static boolean getDebugEnabled() {
 		return logDebug;
@@ -45,7 +49,7 @@ public class LibLog {
 	/**
 	 * Enable or disable debug logging.
 	 * 
-	 * @param debug
+	 * @param debug set debugging mode enabled
 	 */
 	public static void setDebugEnabled(boolean debug) {
 		logDebug = debug;
@@ -54,8 +58,8 @@ public class LibLog {
 	/**
 	 * Load localized strings from disk.
 	 * 
-	 * @param in
-	 * @throws IOException
+	 * @param in stream to .properties file
+	 * @throws IOException failed to read .properties file
 	 */
 	public static void loadStrings(InputStream in) throws IOException {
 		logCodes.load(in);
@@ -64,7 +68,7 @@ public class LibLog {
 	/**
 	 * Add a log receiver.
 	 * 
-	 * @param logger
+	 * @param logger add a custom LogWriter
 	 */
 	public static void addLogger(LogWriter logger) {
 		logWriters.add(logger);
@@ -73,7 +77,7 @@ public class LibLog {
 	/**
 	 * Remove a log receiver.
 	 * 
-	 * @param logger
+	 * @param logger remove a custom LogWriter
 	 */
 	public static void removeLogger(LogWriter logger) {
 		if (logger == null) {
@@ -86,8 +90,8 @@ public class LibLog {
 	/**
 	 * Log a message.
 	 * 
-	 * @param message
-	 * @return
+	 * @param message the message to log
+	 * @return the logged message
 	 */
 	public static LibLogMessage _log(String message) {
 		return log(new LibLogMessage(defaultLog, message, null));
@@ -96,7 +100,7 @@ public class LibLog {
 	/**
 	 * Log a message.
 	 * 
-	 * @param message
+	 * @param message the message to log
 	 * @param e
 	 * @return
 	 */
@@ -108,7 +112,7 @@ public class LibLog {
 	 * Log a message.
 	 * 
 	 * @param facility
-	 * @param message
+	 * @param message  the message to log
 	 * @return
 	 */
 	public static LibLogMessage log(String facility, String message) {
@@ -119,7 +123,7 @@ public class LibLog {
 	 * Log a message
 	 * 
 	 * @param facility
-	 * @param message
+	 * @param message  the message to log
 	 * @param e
 	 * @return
 	 */
@@ -220,7 +224,7 @@ public class LibLog {
 	/**
 	 * Log a message.
 	 * 
-	 * @param message
+	 * @param message the message to log
 	 * @return
 	 */
 	public static LibLogMessage log(LibLogMessage message) {
@@ -232,9 +236,9 @@ public class LibLog {
 	/**
 	 * Format a message.
 	 * 
-	 * @param format
-	 * @param args
-	 * @return
+	 * @param format the string format
+	 * @param args   the format arguments
+	 * @return the formatted string
 	 */
 	public static String f(String format, Object... args) {
 		return String.format(format, args);
@@ -243,8 +247,8 @@ public class LibLog {
 	/**
 	 * Retrieve localized text for the given key.
 	 * 
-	 * @param lookup
-	 * @return
+	 * @param lookup localization code to resolve
+	 * @return the localized string
 	 */
 	public static String c(String lookup) {
 		return ((!logCodes.containsKey(lookup)) ? lookup : //

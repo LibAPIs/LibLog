@@ -22,9 +22,9 @@ public class LibLogMessage {
 	/**
 	 * Build a new LibLogMessage.
 	 * 
-	 * @param facility
-	 * @param message
-	 * @param tossed
+	 * @param facility log facility
+	 * @param message  log message
+	 * @param tossed   optional throwable
 	 */
 	public LibLogMessage(String facility, String message, Throwable tossed) {
 
@@ -56,7 +56,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the time-stamp of message generation.
 	 * 
-	 * @return
+	 * @return the time
 	 */
 	public long getTime() {
 		return time;
@@ -65,7 +65,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the time-stamp of message generation.
 	 * 
-	 * @return
+	 * @return the timestamp
 	 */
 	public String getTimeStamp() {
 		return stamp;
@@ -74,7 +74,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the log facility passed to the logger.
 	 * 
-	 * @return
+	 * @return the facility
 	 */
 	public String getLoggedFacility() {
 		return facility;
@@ -83,7 +83,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the message passed to the logger.
 	 * 
-	 * @return
+	 * @return the message
 	 */
 	public String getLoggedMessage() {
 		return message;
@@ -92,7 +92,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the throwable passed to the logger.
 	 * 
-	 * @return
+	 * @return the throwable
 	 */
 	public Throwable getLoggedThrowable() {
 		return tossed;
@@ -101,7 +101,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the logged throwable wrapped with header / footer.
 	 * 
-	 * @return
+	 * @return throwable as a string
 	 */
 	public String getLoggedThrowableString() {
 		if (tossed == null) {
@@ -120,7 +120,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the class name that invoked the log operation.
 	 * 
-	 * @return
+	 * @return name of calling class
 	 */
 	public String getLoggedClassName() {
 		return className;
@@ -129,7 +129,7 @@ public class LibLogMessage {
 	/**
 	 * Returns the line number that invoked the log operation.
 	 * 
-	 * @return
+	 * @return line number in calling class
 	 */
 	public long getLoggedLineNumber() {
 		return classLine;
@@ -138,7 +138,7 @@ public class LibLogMessage {
 	/**
 	 * Build a basic log line.
 	 * 
-	 * @return
+	 * @return formatted log line
 	 */
 	public String buildLogLine() {
 		return String.format(//
@@ -149,7 +149,7 @@ public class LibLogMessage {
 	/**
 	 * Build a log line with debugging information.
 	 * 
-	 * @return
+	 * @return formatted log line with debug information
 	 */
 	public String buildDebugLine() {
 		return String.format(//
@@ -165,11 +165,24 @@ public class LibLogMessage {
 	}
 
 	/**
-	 * Returns an exception with the logged message as the cause.
+	 * Returns a runtime exception with the logged message as the cause.
 	 * 
-	 * @return
+	 * @return the log message as an exception
 	 */
 	public RuntimeException asException() {
-		return new RuntimeException(getLoggedMessage());
+		return asException(RuntimeException.class);
+	}
+
+	/**
+	 * Returns user defined exception type with the logged message as the cause.
+	 * 
+	 * @return the log message as an exception
+	 */
+	public <T extends Exception> T asException(Class<T> clazz) {
+		try {
+			return clazz.getConstructor(String.class).newInstance(getLoggedMessage());
+		} catch (Exception e) {
+			throw new RuntimeException(getLoggedMessage());
+		}
 	}
 }

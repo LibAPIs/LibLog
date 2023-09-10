@@ -6,6 +6,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * LibLog // LibLog
+ * 
+ * A basic application logger.
+ */
 public class LibLog {
 
 	public interface LogWriter {

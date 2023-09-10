@@ -4,6 +4,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 
+/**
+ * LibLog // LibLogMessage
+ */
 public class LibLogMessage {
 
 	public static final SimpleDateFormat _DFORMAT = //

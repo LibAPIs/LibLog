@@ -12,6 +12,9 @@ import java.util.TimerTask;
 
 import com.mclarkdev.tools.liblog.LibLog.LogWriter;
 
+/**
+ * LibLog // LibLogFileWriter
+ */
 public class LibLogFileWriter implements LogWriter {
 
 	public static final long _1S = (1000);

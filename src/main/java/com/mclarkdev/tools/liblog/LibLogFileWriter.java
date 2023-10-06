@@ -40,17 +40,29 @@ public class LibLogFileWriter implements LogWriter {
 
 		logFiles = new HashMap<>();
 
-		rollLogs();
 		Timer t = new Timer();
 		t.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
-				rollLogs();
+				closeLogs();
 			}
 		}, timeTillRotate(), _1D);
 	}
 
 	public final File getLogDir() {
 		return logDir;
+	}
+
+	public void closeLog(String name) {
+
+		if (!logFiles.containsKey(name)) {
+			logFiles.remove(name).close();
+		}
+	}
+
+	public void closeLogs() {
+		for (Map.Entry<String, PrintWriter> entry : logFiles.entrySet()) {
+			closeLog(entry.getKey());
+		}
 	}
 
 	private PrintWriter newLog(String name) {
@@ -61,23 +73,13 @@ public class LibLogFileWriter implements LogWriter {
 
 		try {
 
-			return (new PrintWriter(new FileWriter(logFile, true), true));
+			PrintWriter stream = (new PrintWriter(new FileWriter(logFile, true), true));
+			logFiles.put(name, stream);
+			return stream;
 		} catch (IOException e) {
 
 			throw new RuntimeException(e);
 		}
-	}
-
-	private void rollLogs() {
-		for (Map.Entry<String, PrintWriter> entry : logFiles.entrySet()) {
-			rollLog(entry.getKey());
-		}
-	}
-
-	private PrintWriter rollLog(String name) {
-		PrintWriter stream = newLog(name);
-		logFiles.put(name, stream);
-		return stream;
 	}
 
 	@Override
@@ -86,7 +88,7 @@ public class LibLogFileWriter implements LogWriter {
 		// Get the output stream
 		String facility = message.getLoggedFacility();
 		PrintWriter out = logFiles.get(facility);
-		out = (out != null) ? out : rollLog(facility);
+		out = (out != null) ? out : newLog(facility);
 
 		// Build the log line
 		String logLine = (debug) ? //

@@ -2,6 +2,7 @@ package com.mclarkdev.tools.liblog;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.IllegalFormatException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +22,9 @@ public class LibLog {
 
 	private static final Set<LogWriter> logWriters;
 
-	private static final Properties logCodes = new Properties();
+	private static final Properties logStrings = new Properties();
+
+	private static boolean logCodes = false;
 
 	private static boolean logDebug = false;
 
@@ -39,6 +42,7 @@ public class LibLog {
 		addLogger(new LibLogFileWriter(logDir));
 
 		// Debug if environment variable set
+		logCodes = (System.getenv("LOG_CODES") != null);
 		logDebug = (System.getenv("LOG_DEBUG") != null);
 	}
 
@@ -67,7 +71,7 @@ public class LibLog {
 	 * @throws IOException failed to read .properties file
 	 */
 	public static void loadStrings(InputStream in) throws IOException {
-		logCodes.load(in);
+		logStrings.load(in);
 	}
 
 	/**
@@ -246,7 +250,13 @@ public class LibLog {
 	 * @return the formatted string
 	 */
 	public static String f(String format, Object... args) {
-		return String.format(format, args);
+		try {
+			return String.format(format, args);
+		} catch (IllegalFormatException e) {
+			String exc = e.getClass().getName();
+			exc = exc.substring(exc.lastIndexOf('.') + 1);
+			return String.format("%s (%s: %s)", format, exc, e.getMessage());
+		}
 	}
 
 	/**
@@ -256,7 +266,7 @@ public class LibLog {
 	 * @return the localized string
 	 */
 	public static String c(String lookup) {
-		return ((!logCodes.containsKey(lookup)) ? lookup : //
-				String.format("%s : %s", lookup, logCodes.getProperty(lookup)));
+		String value = (logStrings.containsKey(lookup)) ? logStrings.getProperty(lookup) : lookup;
+		return (logCodes) ? String.format("%s : %s", lookup, value) : value;
 	}
 }

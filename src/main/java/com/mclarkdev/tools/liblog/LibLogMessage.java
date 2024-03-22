@@ -112,12 +112,12 @@ public class LibLogMessage {
 		}
 
 		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		tossed.printStackTrace(pw);
-		String stack = sw.toString();
-		return " --- STACK BEGIN ---\n" + //
-				stack + //
-				" --- STACK END ---";
+		try (PrintWriter pw = new PrintWriter(sw)) {
+			tossed.printStackTrace(pw);
+			return String.format(//
+					" --- STACK BEGIN ---\n%s\n%s --- STACK END ---", //
+					tossed.getClass().getName(), sw.toString());
+		}
 	}
 
 	/**

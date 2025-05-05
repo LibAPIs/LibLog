@@ -1,13 +1,19 @@
-package com.mclarkdev.tools.liblog;
+package com.mclarkdev.tools.liblog.lib;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 
+import com.mclarkdev.tools.liblog.LibLog;
+
 /**
  * LibLog // LibLogMessage
  */
 public class LibLogMessage {
+
+	public enum LogLevel {
+		DEBUG, INFO, WARN, ERROR;
+	}
 
 	public static final SimpleDateFormat _DFORMAT = //
 			new SimpleDateFormat("YYYYMMdd HH:mm:ss");
@@ -15,6 +21,7 @@ public class LibLogMessage {
 	private final long time;
 	private final String stamp;
 
+	private final LogLevel level;
 	private final String facility;
 	private final String message;
 	private final Throwable tossed;
@@ -29,11 +36,12 @@ public class LibLogMessage {
 	 * @param message  log message
 	 * @param tossed   optional throwable
 	 */
-	public LibLogMessage(String facility, String message, Throwable tossed) {
+	public LibLogMessage(LogLevel level, String facility, String message, Throwable tossed) {
 
 		this.time = System.currentTimeMillis();
 		this.stamp = _DFORMAT.format(time);
 
+		this.level = level;
 		this.facility = facility;
 		this.tossed = tossed;
 
@@ -72,6 +80,15 @@ public class LibLogMessage {
 	 */
 	public String getTimeStamp() {
 		return stamp;
+	}
+
+	/**
+	 * Returns the log level passed to the logger.
+	 * 
+	 * @return the log level
+	 */
+	public LogLevel getLoggedLevel() {
+		return level;
 	}
 
 	/**
@@ -145,8 +162,8 @@ public class LibLogMessage {
 	 */
 	public String buildLogLine() {
 		return String.format(//
-				" +%s - [ %s ] - %s", //
-				stamp, facility, message);
+				" +%s - %s [ %s ] - %s", //
+				stamp, level, facility, message);
 	}
 
 	/**
@@ -156,8 +173,8 @@ public class LibLogMessage {
 	 */
 	public String buildDebugLine() {
 		return String.format(//
-				" +%s - [ %s @ %s : %d ] - %s", //
-				stamp, facility, className, classLine, message);
+				" +%s - %s [ %s @ %s : %d ] - %s", //
+				stamp, level, facility, className, classLine, message);
 	}
 
 	/**

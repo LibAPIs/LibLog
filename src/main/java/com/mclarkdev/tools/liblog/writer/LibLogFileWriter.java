@@ -1,21 +1,26 @@
-package com.mclarkdev.tools.liblog;
+package com.mclarkdev.tools.liblog.writer;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.mclarkdev.tools.liblog.LibLog.LogWriter;
+import com.mclarkdev.tools.liblog.LibLog;
+import com.mclarkdev.tools.liblog.lib.LibLogMessage;
+import com.mclarkdev.tools.liblog.lib.LibLogWriter;
 
 /**
  * LibLog // LibLogFileWriter
  */
-public class LibLogFileWriter implements LogWriter {
+public class LibLogFileWriter extends LibLogWriter {
 
 	public static final long _1S = (1000);
 	public static final long _1M = (_1S * 60);
@@ -31,9 +36,12 @@ public class LibLogFileWriter implements LogWriter {
 
 	private final HashMap<String, PrintWriter> logFiles;
 
-	protected LibLogFileWriter(String dir) {
+	public LibLogFileWriter(URI uri) {
+		super(uri);
 
-		logPath = (dir == null) ? "logs" : dir;
+		String dir = uri.getPath();
+
+		logPath = (dir.equals("/") ? "logs" : dir);
 
 		logDir = (new File(logPath));
 		logDir.mkdirs();
@@ -45,17 +53,19 @@ public class LibLogFileWriter implements LogWriter {
 			public void run() {
 				closeLogs();
 			}
-		}, timeTillRotate(), _1D);
+		}, timeUntilRotate(), _1D);
 	}
 
 	public final File getLogDir() {
 		return logDir;
 	}
 
-	public void closeLog(String name) {
+	public void closeLog(String facility) {
 
-		if (!logFiles.containsKey(name)) {
-			logFiles.remove(name).close();
+		PrintWriter log = logFiles.get(facility);
+		synchronized (log) {
+			logFiles.remove(facility);
+			log.close();
 		}
 	}
 
@@ -73,17 +83,19 @@ public class LibLogFileWriter implements LogWriter {
 
 		try {
 
-			PrintWriter stream = (new PrintWriter(new FileWriter(logFile, true), true));
+			PrintWriter stream = (new PrintWriter(//
+					new FileWriter(logFile, true), true));
 			logFiles.put(name, stream);
 			return stream;
 		} catch (IOException e) {
 
-			throw new RuntimeException(e);
+			throw LibLog.log("logger", //
+					"Failed to write to file.", e).asException();
 		}
 	}
 
 	@Override
-	public void write(boolean debug, LibLogMessage message) {
+	public void write(LibLogMessage message) {
 
 		// Get the output stream
 		String facility = message.getLoggedFacility();
@@ -100,14 +112,10 @@ public class LibLogFileWriter implements LogWriter {
 		}
 	}
 
-	private static long timeTillRotate() {
+	private static long timeUntilRotate() {
 
-		Calendar midnight = Calendar.getInstance();
-		midnight.set(Calendar.HOUR_OF_DAY, 0);
-		midnight.set(Calendar.MINUTE, 0);
-		midnight.set(Calendar.SECOND, 0);
-		midnight.set(Calendar.MILLISECOND, 1);
-		midnight.set(Calendar.DAY_OF_YEAR, midnight.get(Calendar.DAY_OF_YEAR) + 1);
-		return midnight.getTimeInMillis() - System.currentTimeMillis() - 1;
+		Duration untilMidnight = Duration.between(LocalDateTime.now(),
+				LocalDateTime.now().plusDays(1).toLocalDate().atStartOfDay());
+		return untilMidnight.toMillis();
 	}
 }

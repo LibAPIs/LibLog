@@ -2,10 +2,22 @@ package com.mclarkdev.tools.liblog;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.IllegalFormatException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.mclarkdev.tools.liblog.lib.LibLogMessage;
+import com.mclarkdev.tools.liblog.lib.LibLogMessage.LogLevel;
+import com.mclarkdev.tools.liblog.lib.LibLogWriter;
+import com.mclarkdev.tools.liblog.writer.LibLogCachedLogWriter;
+import com.mclarkdev.tools.liblog.writer.LibLogConsoleWriter;
+import com.mclarkdev.tools.liblog.writer.LibLogFileWriter;
+import com.mclarkdev.tools.liblog.writer.LibLogTCPStream;
+import com.mclarkdev.tools.liblog.writer.LibLogUDPWriter;
 
 /**
  * LibLog // LibLog
@@ -14,19 +26,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class LibLog {
 
-	public interface LogWriter {
-		public abstract void write(boolean debug, LibLogMessage message);
-	}
-
 	private static final String defaultLog;
 
-	private static final Set<LogWriter> logWriters;
+	private static final Set<LibLogWriter> logWriters;
 
 	private static final Properties logStrings = new Properties();
 
 	private static boolean logCodes = false;
-
-	private static boolean logDebug = false;
 
 	static {
 
@@ -37,31 +43,14 @@ public class LibLog {
 		// Setup logger cache
 		logWriters = ConcurrentHashMap.newKeySet();
 
-		// Default write logs to disk
-		String logDir = System.getenv("LOG_DIR");
-		addLogger(new LibLogFileWriter(logDir));
-
 		// Debug if environment variable set
 		logCodes = (System.getenv("LOG_CODES") != null);
-		logDebug = (System.getenv("LOG_DEBUG") != null);
-	}
 
-	/**
-	 * Returns true if debug logging is enabled.
-	 * 
-	 * @return debugging mode enabled
-	 */
-	public static boolean getDebugEnabled() {
-		return logDebug;
-	}
-
-	/**
-	 * Enable or disable debug logging.
-	 * 
-	 * @param debug set debugging mode enabled
-	 */
-	public static void setDebugEnabled(boolean debug) {
-		logDebug = debug;
+		// Setup log streams
+		String logStreams = System.getenv("LOG_STREAMS");
+		for (String logStream : logStreams.split(";")) {
+			addLogger(URI.create(logStream));
+		}
 	}
 
 	/**
@@ -77,10 +66,50 @@ public class LibLog {
 	/**
 	 * Add a log receiver.
 	 * 
-	 * @param logger add a custom LogWriter
+	 * @param logURI add logger from URI
 	 */
-	public static void addLogger(LogWriter logger) {
-		logWriters.add(logger);
+	public static void addLogger(URI logURI) {
+
+		String scheme = logURI.getScheme();
+
+		try {
+			switch (scheme) {
+			case "console":
+				addLogger(new LibLogConsoleWriter(logURI));
+				break;
+
+			case "file":
+				addLogger(new LibLogFileWriter(logURI));
+				break;
+
+			case "tcp":
+				addLogger(new LibLogCachedLogWriter(logURI, //
+						new LibLogTCPStream(logURI)));
+				break;
+
+			case "udp":
+				addLogger(new LibLogUDPWriter(logURI));
+				break;
+
+			default:
+				throw new IllegalArgumentException(//
+						"Unsupported logger scheme: " + scheme);
+			}
+		} catch (SocketException e) {
+			e.printStackTrace(System.err);
+		} catch (UnknownHostException e) {
+			e.printStackTrace(System.err);
+		}
+	}
+
+	/**
+	 * Add a log receiver.
+	 * 
+	 * @param writer a custom LogWriter
+	 */
+	public static void addLogger(LibLogWriter writer) {
+
+		logWriters.add(writer);
 	}
 
 	/**
@@ -88,7 +117,7 @@ public class LibLog {
 	 * 
 	 * @param logger remove a custom LogWriter
 	 */
-	public static void removeLogger(LogWriter logger) {
+	public static void removeLogger(LibLogWriter logger) {
 		if (logger == null) {
 			logWriters.clear();
 		} else {
@@ -103,7 +132,7 @@ public class LibLog {
 	 * @return the logged message
 	 */
 	public static LibLogMessage _log(String message) {
-		return log(new LibLogMessage(defaultLog, message, null));
+		return log(new LibLogMessage(LogLevel.INFO, defaultLog, message, null));
 	}
 
 	/**
@@ -114,7 +143,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _log(String message, Throwable e) {
-		return log(new LibLogMessage(defaultLog, message, e));
+		return log(new LibLogMessage(LogLevel.WARN, defaultLog, message, e));
 	}
 
 	/**
@@ -125,7 +154,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage log(String facility, String message) {
-		return log(new LibLogMessage(facility, message, null));
+		return log(new LibLogMessage(LogLevel.INFO, facility, message, null));
 	}
 
 	/**
@@ -137,7 +166,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage log(String facility, String message, Throwable e) {
-		return log(new LibLogMessage(facility, message, e));
+		return log(new LibLogMessage(LogLevel.WARN, facility, message, e));
 	}
 
 	/**
@@ -148,7 +177,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _logF(String format, Object... args) {
-		return log(new LibLogMessage(defaultLog, f(format, args), null));
+		return log(new LibLogMessage(LogLevel.INFO, defaultLog, f(format, args), null));
 	}
 
 	/**
@@ -160,7 +189,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage logF(String facility, String format, Object... args) {
-		return log(new LibLogMessage(facility, f(format, args), null));
+		return log(new LibLogMessage(LogLevel.INFO, facility, f(format, args), null));
 	}
 
 	/**
@@ -170,7 +199,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clog(String code) {
-		return log(new LibLogMessage(defaultLog, c(code), null));
+		return log(new LibLogMessage(LogLevel.INFO, defaultLog, c(code), null));
 	}
 
 	/**
@@ -181,7 +210,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clog(String code, Throwable e) {
-		return log(new LibLogMessage(defaultLog, c(code), e));
+		return log(new LibLogMessage(LogLevel.INFO, defaultLog, c(code), e));
 	}
 
 	/**
@@ -192,7 +221,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage clog(String facility, String code) {
-		return log(new LibLogMessage(facility, c(code), null));
+		return log(new LibLogMessage(LogLevel.INFO, facility, c(code), null));
 	}
 
 	/**
@@ -204,7 +233,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage clog(String facility, String code, Throwable e) {
-		return log(new LibLogMessage(facility, c(code), e));
+		return log(new LibLogMessage(LogLevel.INFO, facility, c(code), e));
 	}
 
 	/**
@@ -215,7 +244,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clogF(String code, Object... args) {
-		return log(new LibLogMessage(defaultLog, f(c(code), args), null));
+		return log(new LibLogMessage(LogLevel.INFO, defaultLog, f(c(code), args), null));
 	}
 
 	/**
@@ -227,7 +256,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage clogF(String facility, String code, Object... args) {
-		return log(new LibLogMessage(facility, f(c(code), args), null));
+		return log(new LibLogMessage(LogLevel.INFO, facility, f(c(code), args), null));
 	}
 
 	/**
@@ -237,8 +266,8 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage log(LibLogMessage message) {
-		for (LogWriter logger : logWriters)
-			logger.write(logDebug, message);
+		for (LibLogWriter logger : logWriters)
+			logger.write(message);
 		return message;
 	}
 

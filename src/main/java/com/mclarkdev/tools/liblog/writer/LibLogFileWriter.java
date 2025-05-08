@@ -19,8 +19,14 @@ import com.mclarkdev.tools.liblog.lib.LibLogWriter;
 
 /**
  * LibLog // LibLogFileWriter
+ * 
+ * Writes messages to a series of log files.
  */
 public class LibLogFileWriter extends LibLogWriter {
+
+	public static String scheme() {
+		return "file";
+	}
 
 	public static final long _1S = (1000);
 	public static final long _1M = (_1S * 60);

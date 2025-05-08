@@ -7,9 +7,15 @@ import com.mclarkdev.tools.liblog.lib.LibLogMessage;
 import com.mclarkdev.tools.liblog.lib.LibLogWriter;
 
 /**
- * LibLog // LibLogFileWriter
+ * LibLog // LibLogConsoleWriter
+ * 
+ * Writes messages to STDOUT.
  */
 public class LibLogConsoleWriter extends LibLogWriter {
+
+	public static String scheme() {
+		return "console";
+	}
 
 	private final PrintStream out;
 

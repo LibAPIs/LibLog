@@ -20,4 +20,8 @@ public abstract class LibLogWriter {
 	 * @param logMessage the message to write
 	 */
 	public abstract void write(LibLogMessage logMessage);
+
+	public static String scheme() {
+		return null;
+	}
 }

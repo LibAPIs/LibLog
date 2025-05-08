@@ -1,4 +1,4 @@
-package com.mclarkdev.tools.liblog.writer;
+package com.mclarkdev.tools.liblog.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -8,10 +8,9 @@ import java.net.URI;
 import java.net.UnknownHostException;
 
 import com.mclarkdev.tools.liblog.LibLog;
-import com.mclarkdev.tools.liblog.lib.LibLogStream;
 
 /**
- * LibLog // LibLogFileWriter
+ * LibLog // LibLogTCPStream
  */
 public class LibLogTCPStream implements LibLogStream {
 
@@ -46,9 +45,12 @@ public class LibLogTCPStream implements LibLogStream {
 			return true;
 		}
 
+		// Disconnect if connected
+		disconnect();
+
 		try {
 
-			disconnect();
+			// Create new socket connection
 			logSocket = new Socket(logAddr, logPort);
 			return true;
 

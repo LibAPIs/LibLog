@@ -12,9 +12,15 @@ import com.mclarkdev.tools.liblog.lib.LibLogMessage;
 import com.mclarkdev.tools.liblog.lib.LibLogWriter;
 
 /**
- * LibLog // LibLogFileWriter
+ * LibLog // LibLogUDPWriter
+ * 
+ * Writes log messages to a UDP server.
  */
 public class LibLogUDPWriter extends LibLogWriter {
+
+	public static String scheme() {
+		return "udp";
+	}
 
 	protected DatagramSocket logSocket = null;
 

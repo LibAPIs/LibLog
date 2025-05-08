@@ -1,18 +1,21 @@
-package com.mclarkdev.tools.liblog.writer;
+package com.mclarkdev.tools.liblog.lib;
 
 import java.net.URI;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.mclarkdev.tools.liblog.lib.LibLogMessage;
-import com.mclarkdev.tools.liblog.lib.LibLogStream;
-import com.mclarkdev.tools.liblog.lib.LibLogWriter;
-
-public class LibLogCachedLogWriter extends LibLogWriter {
+/**
+ * LibLog // LibLogCachedLogWriter
+ */
+public abstract class LibLogCachedLogWriter extends LibLogWriter {
 
 	protected final LibLogStream stream;
 
+	protected final int messageCacheMax;
+
 	protected final Queue<String> messageCache;
+
+	private long messagesDropped = 0;
 
 	public LibLogCachedLogWriter(URI uri, LibLogStream stream) {
 		super(uri);
@@ -22,6 +25,7 @@ public class LibLogCachedLogWriter extends LibLogWriter {
 
 		// Setup log cache
 		this.messageCache = new ConcurrentLinkedQueue<>();
+		this.messageCacheMax = 500000;
 
 		// Cache flushing thread
 		new Thread() {
@@ -31,7 +35,7 @@ public class LibLogCachedLogWriter extends LibLogWriter {
 
 				while (!isInterrupted()) {
 					flush();
-					yield();
+					Thread.yield();
 				}
 			}
 		}.start();
@@ -42,8 +46,17 @@ public class LibLogCachedLogWriter extends LibLogWriter {
 	 * 
 	 * @return size of the cache
 	 */
-	public int cacheSize() {
+	public int getMessagesCached() {
 		return messageCache.size();
+	}
+
+	/**
+	 * Returns the number of messages dropped from the cached.
+	 * 
+	 * @return number of messages dropped
+	 */
+	public long getMessagesDropped() {
+		return messagesDropped;
 	}
 
 	/**
@@ -55,6 +68,10 @@ public class LibLogCachedLogWriter extends LibLogWriter {
 
 		synchronized (messageCache) {
 			messageCache.add(logLine);
+			if (messageCache.size() > messageCacheMax) {
+				messageCache.remove();
+				messagesDropped++;
+			}
 		}
 	}
 
@@ -72,7 +89,6 @@ public class LibLogCachedLogWriter extends LibLogWriter {
 			messageCache.remove();
 		}
 
-		System.gc();
 		return true;
 	}
 

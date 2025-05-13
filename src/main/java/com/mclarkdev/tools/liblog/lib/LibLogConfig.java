@@ -61,6 +61,14 @@ public class LibLogConfig {
 		return (logCodes) ? String.format("%s : %s", lookup, value) : value;
 	}
 
+	public void shutdown() {
+
+		// Loop and shutdown the writers
+		for (LibLogWriter writer : logWriters) {
+			writer.shutdown();
+		}
+	}
+
 	/**
 	 * Load localized strings from disk.
 	 * 

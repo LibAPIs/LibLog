@@ -56,4 +56,11 @@ public class LibLogUDPWriter extends LibLogWriter {
 			e.printStackTrace(System.err);
 		}
 	}
+
+	@Override
+	public void shutdown() {
+		this.logSocket.close();
+		this.logSocket = null;
+		System.gc();
+	}
 }

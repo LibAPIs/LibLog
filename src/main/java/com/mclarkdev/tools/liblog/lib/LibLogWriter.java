@@ -21,6 +21,8 @@ public abstract class LibLogWriter {
 	 */
 	public abstract void write(LibLogMessage logMessage);
 
+	public abstract void shutdown();
+
 	public static String scheme() {
 		return null;
 	}

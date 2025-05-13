@@ -118,6 +118,14 @@ public class LibLogFileWriter extends LibLogWriter {
 		}
 	}
 
+	@Override
+	public void shutdown() {
+		for (Map.Entry<String, PrintWriter> entry : logFiles.entrySet()) {
+			entry.getValue().close();
+			logFiles.remove(entry.getKey());
+		}
+	}
+
 	private static long timeUntilRotate() {
 
 		Duration untilMidnight = Duration.between(LocalDateTime.now(),

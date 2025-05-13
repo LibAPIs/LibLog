@@ -106,7 +106,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clog(String code) {
-		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), cfg.l10n(code), null));
+		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), c(code), null));
 	}
 
 	/**
@@ -117,7 +117,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clog(String code, Throwable e) {
-		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), cfg.l10n(code), e));
+		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), c(code), e));
 	}
 
 	/**
@@ -128,7 +128,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage clog(String facility, String code) {
-		return log(new LibLogMessage(LogLevel.INFO, facility, cfg.l10n(code), null));
+		return log(new LibLogMessage(LogLevel.INFO, facility, c(code), null));
 	}
 
 	/**
@@ -140,7 +140,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage clog(String facility, String code, Throwable e) {
-		return log(new LibLogMessage(LogLevel.INFO, facility, cfg.l10n(code), e));
+		return log(new LibLogMessage(LogLevel.INFO, facility, c(code), e));
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage _clogF(String code, Object... args) {
-		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), f(cfg.l10n(code), args), null));
+		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), f(c(code), args), null));
 	}
 
 	/**
@@ -163,7 +163,7 @@ public class LibLog {
 	 * @return
 	 */
 	public static LibLogMessage clogF(String facility, String code, Object... args) {
-		return log(new LibLogMessage(LogLevel.INFO, facility, f(cfg.l10n(code), args), null));
+		return log(new LibLogMessage(LogLevel.INFO, facility, f(c(code), args), null));
 	}
 
 	/**
@@ -196,9 +196,19 @@ public class LibLog {
 	}
 
 	/**
+	 * Return a localized string for a given code.
+	 * 
+	 * @param lookup the lookup code
+	 * @return the localized string
+	 */
+	public static String c(String lookup) {
+		return cfg().l10n(lookup);
+	}
+
+	/**
 	 * Return an instance of the logger configuration.
 	 * 
-	 * @return logger config
+	 * @return logger configuration
 	 */
 	public static LibLogConfig cfg() {
 		return cfg;

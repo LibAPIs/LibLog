@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public abstract class LibLogCachedLogWriter extends LibLogWriter {
 
+	private static final int FLUSH_DELAY = 1000;
+
 	protected final LibLogStream stream;
 
 	protected final int messageCacheMax;
@@ -16,6 +18,8 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 	protected final Queue<String> messageCache;
 
 	private long messagesDropped = 0;
+
+	private final Thread flushThread;
 
 	public LibLogCachedLogWriter(URI uri, LibLogStream stream) {
 		super(uri);
@@ -28,17 +32,44 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 		this.messageCacheMax = 500000;
 
 		// Cache flushing thread
-		new Thread() {
+		this.flushThread = new Thread() {
+			long next = 0;
+
 			public void run() {
 				setName(String.format(//
 						"LibLogCachedWriter:LogSend (%s)", uri.toString()));
 
 				while (!isInterrupted()) {
-					flush();
-					Thread.yield();
+					try {
+						// Wait for next loop
+						while (next > System.currentTimeMillis()) {
+							Thread.sleep(10);
+						}
+
+						// Determine next start time
+						next = System.currentTimeMillis() + FLUSH_DELAY;
+
+						// Do the flush
+						flush();
+
+					} catch (InterruptedException e) {
+						return;
+					}
 				}
 			}
-		}.start();
+		};
+		this.flushThread.start();
+	}
+
+	@Override
+	public void shutdown() {
+		try {
+			this.flushThread.interrupt();
+			this.flushThread.join();
+		} catch (InterruptedException e) {
+		} finally {
+			System.gc();
+		}
 	}
 
 	/**

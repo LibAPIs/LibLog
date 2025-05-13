@@ -39,4 +39,8 @@ public class LibLogConsoleWriter extends LibLogWriter {
 			out.println(logLine);
 		}
 	}
+
+	@Override
+	public void shutdown() {
+	}
 }

@@ -37,6 +37,7 @@ public class LibLogConfig {
 
 		// Parse user requested log streams
 		String logStreams = System.getenv("LOG_STREAMS");
+		logStreams = (logStreams != null) ? logStreams : "console:/";
 		for (String logStream : logStreams.split(";")) {
 			userLogs.add(URI.create(logStream));
 		}

@@ -5,6 +5,8 @@ A basic application logger.
 - Multiple log files
 - Roll log files daily
 - String localization
+- Send messages to log servers
+- Additional plugin log options
 - And more...
 
 ## Maven Dependency
@@ -15,18 +17,26 @@ Include the library in your project by adding the following dependency to your p
 <dependency>
 	<groupId>com.mclarkdev.tools</groupId>
 	<artifactId>liblog</artifactId>
-	<version>1.5.1</version>
+	<version>1.6.5</version>
 </dependency>
 ```
 
 ## Configuration
 
-Default configuraion values can be modified by setting environment variables prior to launching the application.
+Default log configuration can be modified by setting environment variables prior to launching the application.
 
 ```
-LOG_DIR    Set the path where log files will be created.	(logs)
-LOG_NAME   Set the base name of the default log file.		(server)
-LOG_DEBUG  Set any value to enable debug logging.
+# console:/[?debug]
+# file:/[?debug]
+# file:/data/logs/[?debug]
+# tcp://127.0.0.1:1234[/][?debug]
+# udp://127.0.0.1:1234[/][?debug]
+
+# Console and files on disk
+LOG_STREAMS=console:/;file:/
+
+# Log to disk, and send to a log server bound on :1234
+LOG_STREAMS=file:/;tcp://127.0.0.1:1234
 ```
 
 ## Example

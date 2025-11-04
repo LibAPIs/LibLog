@@ -37,6 +37,10 @@ public class LibLogUDPWriter extends LibLogWriter {
 	}
 
 	@Override
+	public void setup() {
+	}
+
+	@Override
 	public void write(LibLogMessage message) {
 
 		// Build the log line

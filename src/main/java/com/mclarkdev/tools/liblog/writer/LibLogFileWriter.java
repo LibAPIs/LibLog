@@ -47,12 +47,17 @@ public class LibLogFileWriter extends LibLogWriter {
 
 		String dir = uri.getPath();
 
-		logPath = (dir.equals("/") ? "logs" : dir);
+		this.logPath = (dir.equals("/") ? "logs" : dir);
 
-		logDir = (new File(logPath));
+		this.logDir = (new File(logPath));
+
+		this.logFiles = new HashMap<>();
+	}
+
+	@Override
+	public void setup() {
+
 		logDir.mkdirs();
-
-		logFiles = new HashMap<>();
 
 		Timer t = new Timer();
 		t.scheduleAtFixedRate(new TimerTask() {
@@ -63,6 +68,7 @@ public class LibLogFileWriter extends LibLogWriter {
 	}
 
 	public final File getLogDir() {
+
 		return logDir;
 	}
 

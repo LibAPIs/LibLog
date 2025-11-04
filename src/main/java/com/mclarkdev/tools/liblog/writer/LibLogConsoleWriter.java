@@ -25,6 +25,10 @@ public class LibLogConsoleWriter extends LibLogWriter {
 		this.out = System.out;
 	}
 
+	@Override
+	public void setup() {
+	}
+
 	/**
 	 * Write log messages to the console. (stdout)
 	 */

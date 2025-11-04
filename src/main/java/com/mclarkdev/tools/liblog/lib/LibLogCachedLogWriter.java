@@ -19,7 +19,34 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 
 	private long messagesDropped = 0;
 
-	private final Thread flushThread;
+	// Cache flushing thread
+	private final Thread flushThread = new Thread() {
+		long next = 0;
+
+		public void run() {
+			setName(String.format(//
+					"LibLogCachedWriter:LogSend (%s)", uri.toString()));
+
+			while (!isInterrupted()) {
+				try {
+
+					// Wait for next flush loop
+					while (next > System.currentTimeMillis()) {
+						Thread.sleep(10);
+					}
+
+					// Determine next start time
+					next = System.currentTimeMillis() + FLUSH_DELAY;
+
+					// Do the flush
+					flush();
+
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		}
+	};
 
 	public LibLogCachedLogWriter(URI uri, LibLogStream stream) {
 		super(uri);
@@ -30,34 +57,10 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 		// Setup log cache
 		this.messageCache = new ConcurrentLinkedQueue<>();
 		this.messageCacheMax = 500000;
+	}
 
-		// Cache flushing thread
-		this.flushThread = new Thread() {
-			long next = 0;
-
-			public void run() {
-				setName(String.format(//
-						"LibLogCachedWriter:LogSend (%s)", uri.toString()));
-
-				while (!isInterrupted()) {
-					try {
-						// Wait for next loop
-						while (next > System.currentTimeMillis()) {
-							Thread.sleep(10);
-						}
-
-						// Determine next start time
-						next = System.currentTimeMillis() + FLUSH_DELAY;
-
-						// Do the flush
-						flush();
-
-					} catch (InterruptedException e) {
-						return;
-					}
-				}
-			}
-		};
+	@Override
+	public void setup() {
 		this.flushThread.start();
 	}
 

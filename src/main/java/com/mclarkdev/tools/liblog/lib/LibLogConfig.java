@@ -57,11 +57,20 @@ public class LibLogConfig {
 		return logWriters;
 	}
 
+	/**
+	 * Lookup a localized string by code.
+	 * 
+	 * @param lookup the lookup code
+	 * @return the localized string
+	 */
 	public String l10n(String lookup) {
 		String value = (logStrings.containsKey(lookup)) ? logStrings.getProperty(lookup) : lookup;
 		return (logCodes) ? String.format("%s : %s", lookup, value) : value;
 	}
 
+	/**
+	 * Shutdown all log writers.
+	 */
 	public void shutdown() {
 
 		// Loop and shutdown the writers
@@ -93,9 +102,10 @@ public class LibLogConfig {
 			scheme = (String) method.invoke(null);
 			logHandlers.put(scheme, clazz);
 		} catch (Exception e) {
-			System.err.print("Failed to setup logger.");
-			e.printStackTrace(System.err);
-			return;
+
+			// Throw logger registration failure
+			throw new RuntimeException(//
+					"Failed to register logger: " + clazz.getName(), e);
 		}
 
 		// Loop user URIs
@@ -123,14 +133,34 @@ public class LibLogConfig {
 			throw new IllegalArgumentException("Unknown logger scheme: " + scheme);
 		}
 
+		LibLogWriter logWriter = null;
+
 		try {
+
+			// Create and instantiate the logger
 			Constructor<? extends LibLogWriter> ctor = //
 					clazz.getConstructor(URI.class);
-			addLogger(ctor.newInstance(logURI));
-		} catch (Exception e) {
+			logWriter = ctor.newInstance(logURI);
+		} catch (Error | Exception e) {
+
+			// Throw logger creation failure
 			throw new RuntimeException(//
 					"Failed to instantiate logger for scheme: " + scheme, e);
 		}
+
+		try {
+
+			// Call the logger setup method
+			logWriter.setup();
+		} catch (Error | Exception e) {
+
+			// Throw logger setup failure
+			throw new RuntimeException(//
+					"Failed to setup logger for scheme: " + scheme, e);
+		}
+
+		// Logger setup success, add to map
+		addLogger(logWriter);
 	}
 
 	/**

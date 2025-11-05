@@ -12,6 +12,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * LibLog // LibLogConfig
+ */
 public class LibLogConfig {
 
 	private final String defaultLog;

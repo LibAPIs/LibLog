@@ -46,8 +46,8 @@ public class LibLog {
 	 * Log a message.
 	 * 
 	 * @param message the message to log
-	 * @param e
-	 * @return
+	 * @param e       the exception to log
+	 * @return the log message
 	 */
 	public static LibLogMessage _log(String message, Throwable e) {
 		return log(new LibLogMessage(LogLevel.WARN, cfg.defaultLog(), message, e));
@@ -56,9 +56,9 @@ public class LibLog {
 	/**
 	 * Log a message.
 	 * 
-	 * @param facility
+	 * @param facility the log message facility
 	 * @param message  the message to log
-	 * @return
+	 * @return the log message
 	 */
 	public static LibLogMessage log(String facility, String message) {
 		return log(new LibLogMessage(LogLevel.INFO, facility, message, null));
@@ -67,10 +67,10 @@ public class LibLog {
 	/**
 	 * Log a message
 	 * 
-	 * @param facility
+	 * @param facility the log message facility
 	 * @param message  the message to log
-	 * @param e
-	 * @return
+	 * @param e        the exception to log
+	 * @return the log message
 	 */
 	public static LibLogMessage log(String facility, String message, Throwable e) {
 		return log(new LibLogMessage(LogLevel.WARN, facility, message, e));
@@ -79,9 +79,9 @@ public class LibLog {
 	/**
 	 * Log a message.
 	 * 
-	 * @param format
-	 * @param args
-	 * @return
+	 * @param format the log message format
+	 * @param args   the log message arguments
+	 * @return the log message
 	 */
 	public static LibLogMessage _logF(String format, Object... args) {
 		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), f(format, args), null));
@@ -90,10 +90,10 @@ public class LibLog {
 	/**
 	 * Log a message.
 	 * 
-	 * @param facility
-	 * @param format
-	 * @param args
-	 * @return
+	 * @param facility the log message facility
+	 * @param format   the log message format
+	 * @param args     the log message arguments
+	 * @return the log message
 	 */
 	public static LibLogMessage logF(String facility, String format, Object... args) {
 		return log(new LibLogMessage(LogLevel.INFO, facility, f(format, args), null));
@@ -102,8 +102,8 @@ public class LibLog {
 	/**
 	 * Log a localized message.
 	 * 
-	 * @param code
-	 * @return
+	 * @param code the localized message code
+	 * @return the log message
 	 */
 	public static LibLogMessage _clog(String code) {
 		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), c(code), null));
@@ -112,9 +112,9 @@ public class LibLog {
 	/**
 	 * Log a localized message.
 	 * 
-	 * @param code
-	 * @param e
-	 * @return
+	 * @param code the localized message code
+	 * @param e    the exception to log
+	 * @return the log message
 	 */
 	public static LibLogMessage _clog(String code, Throwable e) {
 		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), c(code), e));
@@ -123,9 +123,9 @@ public class LibLog {
 	/**
 	 * Log a localized message.
 	 * 
-	 * @param facility
-	 * @param code
-	 * @return
+	 * @param facility the log message facility
+	 * @param code     the localized message code
+	 * @return the log message
 	 */
 	public static LibLogMessage clog(String facility, String code) {
 		return log(new LibLogMessage(LogLevel.INFO, facility, c(code), null));
@@ -134,10 +134,10 @@ public class LibLog {
 	/**
 	 * Log a localized message.
 	 * 
-	 * @param facility
-	 * @param code
-	 * @param e
-	 * @return
+	 * @param facility the log message facility
+	 * @param code     the localized message code
+	 * @param e        the exception to log
+	 * @return the log message
 	 */
 	public static LibLogMessage clog(String facility, String code, Throwable e) {
 		return log(new LibLogMessage(LogLevel.INFO, facility, c(code), e));
@@ -146,9 +146,9 @@ public class LibLog {
 	/**
 	 * Log a localized message.
 	 * 
-	 * @param code
-	 * @param args
-	 * @return
+	 * @param code the localized message code
+	 * @param args the log message arguments
+	 * @return the log message
 	 */
 	public static LibLogMessage _clogF(String code, Object... args) {
 		return log(new LibLogMessage(LogLevel.INFO, cfg.defaultLog(), f(c(code), args), null));
@@ -157,10 +157,10 @@ public class LibLog {
 	/**
 	 * Log a localized message.
 	 * 
-	 * @param facility
-	 * @param code
-	 * @param args
-	 * @return
+	 * @param facility the log message facility
+	 * @param code     the localized message code
+	 * @param args     the log message arguments
+	 * @return the log message
 	 */
 	public static LibLogMessage clogF(String facility, String code, Object... args) {
 		return log(new LibLogMessage(LogLevel.INFO, facility, f(c(code), args), null));
@@ -170,20 +170,27 @@ public class LibLog {
 	 * Log a message.
 	 * 
 	 * @param message the message to log
-	 * @return
+	 * @return the log message
 	 */
 	public static LibLogMessage log(LibLogMessage message) {
-		for (LibLogWriter logger : cfg.loggers())
-			logger.write(message);
+		for (LibLogWriter logger : cfg.loggers()) {
+			try {
+				logger.write(message);
+			} catch (Error | Exception ex) {
+				System.err.printf("Failed writing log.\n ( %s )\n", message);
+				ex.printStackTrace(System.err);
+			}
+		}
+
 		return message;
 	}
 
 	/**
 	 * Format a message.
 	 * 
-	 * @param format the string format
-	 * @param args   the format arguments
-	 * @return the formatted string
+	 * @param format the log message format
+	 * @param args   the log message arguments
+	 * @return the formatted log string
 	 */
 	public static String f(String format, Object... args) {
 		try {
@@ -198,11 +205,11 @@ public class LibLog {
 	/**
 	 * Return a localized string for a given code.
 	 * 
-	 * @param lookup the lookup code
+	 * @param code the localized message code
 	 * @return the localized string
 	 */
-	public static String c(String lookup) {
-		return cfg().l10n(lookup);
+	public static String c(String code) {
+		return cfg().l10n(code);
 	}
 
 	/**

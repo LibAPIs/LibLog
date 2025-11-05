@@ -11,12 +11,17 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 
 	private static final int FLUSH_DELAY = 1000;
 
+	// The log stream
 	protected final LibLogStream stream;
 
+	// Max number of messages to cache
 	protected final int messageCacheMax;
 
+	// The log message cache
 	protected final Queue<String> messageCache;
 
+	// Counters for processed / dropped
+	private long messagesProcessed = 0;
 	private long messagesDropped = 0;
 
 	// Cache flushing thread
@@ -85,6 +90,15 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 	}
 
 	/**
+	 * Returns the number of messages processed through the cache.
+	 * 
+	 * @return number of messages processed
+	 */
+	public long getMessagesProcessed() {
+		return messagesProcessed;
+	}
+
+	/**
 	 * Returns the number of messages dropped from the cached.
 	 * 
 	 * @return number of messages dropped
@@ -121,6 +135,7 @@ public abstract class LibLogCachedLogWriter extends LibLogWriter {
 				return false;
 			}
 			messageCache.remove();
+			messagesProcessed++;
 		}
 
 		return true;

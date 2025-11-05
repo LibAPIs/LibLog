@@ -17,7 +17,7 @@ Include the library in your project by adding the following dependency to your p
 <dependency>
 	<groupId>com.mclarkdev.tools</groupId>
 	<artifactId>liblog</artifactId>
-	<version>1.6.5</version>
+	<version>1.6.6</version>
 </dependency>
 ```
 

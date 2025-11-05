@@ -9,6 +9,15 @@ import com.mclarkdev.tools.liblog.LibLog;
  */
 public abstract class LibLogWriter {
 
+	/**
+	 * Returns the logger scheme advertised.
+	 * 
+	 * @return the logger scheme
+	 */
+	public static String scheme() {
+		return null;
+	}
+
 	protected final URI uri;
 
 	protected final String scheme;
@@ -26,6 +35,11 @@ public abstract class LibLogWriter {
 		LibLog.logF("logger", "Created LogWriter: %s", uri);
 	}
 
+	/**
+	 * Called when the logger is created.
+	 * 
+	 * Used to initialize streams or create directories.
+	 */
 	public abstract void setup();
 
 	/**
@@ -35,9 +49,10 @@ public abstract class LibLogWriter {
 	 */
 	public abstract void write(LibLogMessage logMessage);
 
+	/**
+	 * Called when the logger is to be shutdown.
+	 * 
+	 * Used to close all streams and files.
+	 */
 	public abstract void shutdown();
-
-	public static String scheme() {
-		return null;
-	}
 }

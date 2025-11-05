@@ -19,6 +19,12 @@ public class LibLogTCPStream implements LibLogStream {
 	private final int logPort;
 	private final InetAddress logAddr;
 
+	/**
+	 * Initialize a new TCP based log stream.
+	 * 
+	 * @param addr the connection address
+	 * @throws UnknownHostException failed resolving address
+	 */
 	public LibLogTCPStream(URI addr) throws UnknownHostException {
 
 		this.logPort = addr.getPort();
@@ -28,7 +34,7 @@ public class LibLogTCPStream implements LibLogStream {
 	/**
 	 * Returns true if connected to the log service.
 	 * 
-	 * @return
+	 * @return true if connected
 	 */
 	public boolean connected() {
 		return ((logSocket != null) && (logSocket.isConnected()));
@@ -38,7 +44,7 @@ public class LibLogTCPStream implements LibLogStream {
 	 * Connect to the remote logging server.
 	 * 
 	 * @param force Force a reconnect.
-	 * @return
+	 * @return connect successful
 	 */
 	protected boolean connect(boolean force) {
 		if (connected() && !force) {
@@ -56,6 +62,7 @@ public class LibLogTCPStream implements LibLogStream {
 
 		} catch (IOException e) {
 
+			// Log the stream connection failure
 			LibLog.logF("logger", "LibLogTCP: Failed to connect (tcp://%s:%d)", logAddr.toString(), logPort);
 			return false;
 		}
@@ -80,8 +87,8 @@ public class LibLogTCPStream implements LibLogStream {
 	/**
 	 * Write a message to the log server.
 	 * 
-	 * @param message
-	 * @return
+	 * @param message the log message
+	 * @return write successful
 	 */
 	@Override
 	public boolean write(String message) {

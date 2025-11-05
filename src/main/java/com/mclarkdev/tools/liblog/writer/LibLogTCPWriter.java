@@ -8,7 +8,7 @@ import com.mclarkdev.tools.liblog.lib.LibLogCachedLogWriter;
 import com.mclarkdev.tools.liblog.lib.LibLogTCPStream;
 
 /**
- * LibLog // LibLogCachedTCPWriter
+ * LibLog // LibLogTCPWriter
  * 
  * Writes log messages to a TCP server.
  * 

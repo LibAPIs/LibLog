@@ -8,10 +8,10 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.mclarkdev.tools.liblog.LibLog;
 import com.mclarkdev.tools.liblog.lib.LibLogMessage;
@@ -40,7 +40,7 @@ public class LibLogFileWriter extends LibLogWriter {
 	private final File logDir;
 	private final String logPath;
 
-	private final HashMap<String, PrintWriter> logFiles;
+	private final ConcurrentHashMap<String, PrintWriter> logFiles;
 
 	public LibLogFileWriter(URI uri) {
 		super(uri);
@@ -51,20 +51,24 @@ public class LibLogFileWriter extends LibLogWriter {
 
 		this.logDir = (new File(logPath));
 
-		this.logFiles = new HashMap<>();
+		this.logFiles = new ConcurrentHashMap<>();
 	}
 
 	@Override
 	public void setup() {
 
+		// TODO move this / make static
+		Timer logTimer = new Timer();
+
 		logDir.mkdirs();
 
-		Timer t = new Timer();
-		t.scheduleAtFixedRate(new TimerTask() {
+		long rotate = timeUntilRotate();
+		logTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
-				closeLogs();
+				rotateLogs();
 			}
-		}, timeUntilRotate(), _1D);
+		}, rotate, _1D);
+		LibLog.logF("logger", "First log rotate in %dms.", rotate);
 	}
 
 	public final File getLogDir() {
@@ -87,23 +91,44 @@ public class LibLogFileWriter extends LibLogWriter {
 		}
 	}
 
-	private PrintWriter newLog(String name) {
+	private void rotateLogs() {
+		for (Map.Entry<String, PrintWriter> entry : logFiles.entrySet()) {
+			newLog(entry.getKey());
+		}
+	}
 
+	private PrintWriter newLog(String facility) {
+
+		// Determine the name of the log file
 		File logFile = new File(logDir, //
 				String.format("%s-%s.log", //
-						getTime().substring(0, 8), name));
+						getTime().substring(0, 8), facility));
+
+		PrintWriter stream = null;
 
 		try {
 
-			PrintWriter stream = (new PrintWriter(//
+			// Create the new log stream
+			stream = (new PrintWriter(//
 					new FileWriter(logFile, true), true));
-			logFiles.put(name, stream);
-			return stream;
 		} catch (IOException e) {
 
+			// Log the stream creation failure
 			throw LibLog.log("logger", //
-					"Failed to write to file.", e).asException();
+					"Failed to create log stream.", e).asException();
 		}
+
+		// Update the log stream
+		PrintWriter existing = //
+				logFiles.put(facility, stream);
+
+		// Close the previous stream
+		if (existing != null) {
+			existing.close();
+		}
+
+		// Return the new stream
+		return stream;
 	}
 
 	@Override

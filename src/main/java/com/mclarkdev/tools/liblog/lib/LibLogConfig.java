@@ -52,10 +52,20 @@ public class LibLogConfig {
 		logWriters = ConcurrentHashMap.newKeySet();
 	}
 
+	/**
+	 * Returns the name of the default log.
+	 * 
+	 * @return name of the default log
+	 */
 	public String defaultLog() {
 		return defaultLog;
 	}
 
+	/**
+	 * Returns a set of all log writers.
+	 * 
+	 * @return all log writer
+	 */
 	public Set<LibLogWriter> loggers() {
 		return logWriters;
 	}
@@ -95,20 +105,20 @@ public class LibLogConfig {
 	/**
 	 * Register a new log handler scheme.
 	 * 
-	 * @param clazz the handler class
+	 * @param logger the handler class
 	 */
-	public void registerLogger(Class<? extends LibLogWriter> clazz) {
+	public void registerLogger(Class<? extends LibLogWriter> logger) {
 
 		String scheme;
 		try {
-			Method method = clazz.getMethod("scheme");
+			Method method = logger.getMethod("scheme");
 			scheme = (String) method.invoke(null);
-			logHandlers.put(scheme, clazz);
+			logHandlers.put(scheme, logger);
 		} catch (Exception e) {
 
 			// Throw logger registration failure
 			throw new RuntimeException(//
-					"Failed to register logger: " + clazz.getName(), e);
+					"Failed to register logger: " + logger.getName(), e);
 		}
 
 		// Loop user URIs
